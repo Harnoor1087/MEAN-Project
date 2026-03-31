@@ -12,12 +12,44 @@ from insight_engine import (
 from skill_extractor import extract_skills
 
 import os
-
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def generate_embedding(text):
     return model.encode(text)
+
+from database import SessionLocal
+from models import Candidate
+
+def save_to_db(data):
+
+    db = SessionLocal()
+
+    # Check if already exists
+    existing = db.query(Candidate).filter(
+        Candidate.name == data["name"],
+        Candidate.final_score == data["final"]
+    ).first()
+
+    if existing:
+        print("Duplicate entry found. Not saving again.")
+        db.close()
+        return
+
+    candidate = Candidate(
+        name=data["name"],
+        semantic_score=data["semantic"],
+        skill_score=data["skill"],
+        experience_score=data["experience"],
+        final_score=data["final"],
+        category=data["category"],
+        matched_skills=", ".join(data["matched"]),
+        missing_skills=", ".join(data["missing"])
+    )
+
+    db.add(candidate)
+    db.commit()
+    db.close()
 
 
 if __name__ == "__main__":
@@ -26,6 +58,18 @@ if __name__ == "__main__":
 
     # Resume
     resume_text = extract_text(resume_path)
+
+    lines = resume_text.split("\n")
+
+    name = "Unknown Candidate"
+
+    for line in lines:
+        line = line.strip()
+
+        if len(line) > 3 and "@" not in line and "http" not in line:
+            name = line
+            break
+      
     resume_clean = process_text(resume_text)
     resume_embedding = generate_embedding(resume_clean)
 
@@ -72,6 +116,23 @@ if __name__ == "__main__":
 
     # Classification
     category = classify_candidate(final_score, skill_score)
+
+    data = {
+    "name" : name,
+    "semantic": semantic_score,
+    "skill": skill_score,
+    "experience": experience_score,
+    "final": final_score,
+    "category": category,
+    "matched": resume_skills,
+    "missing": missing_skills
+}
+
+    try:
+      save_to_db(data)
+      print("Data saved to database successfully")
+    except Exception as e:
+       print("Database error:", e)
 
     # Output
     print("\n--- FINAL ANALYSIS ---")
