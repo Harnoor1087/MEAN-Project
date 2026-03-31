@@ -1,15 +1,8 @@
-from resume_parser import extract_text
 SKILLS = [
-
-"python",
-"java",
-"sql",
-"machine learning",
-"deep learning",
-"tensorflow",
-"data analysis",
-"fastapi"
-
+    "python", "java", "sql", "machine learning",
+    "deep learning", "django", "mysql",
+    "numpy", "pandas", "scikit", "llm",
+    "prompt engineering", "git", "github"
 ]
 
 def extract_skills(text):
@@ -17,9 +10,7 @@ def extract_skills(text):
     found = []
 
     for skill in SKILLS:
-
-        if skill in text:
-
+        if skill in text.lower():
             found.append(skill)
 
     return found
