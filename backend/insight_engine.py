@@ -53,9 +53,12 @@ def get_skill_gap(resume_skills, job_skills):
     return missing
 
 # Classifying candidates as strong, moderate and weak match
-def classify_candidate(final_score):
+def classify_candidate(final_score, skill_score):
 
-    if final_score >= 0.75:
+    if skill_score >= 0.9:
+        return "Strong Match"
+
+    elif final_score >= 0.7:
         return "Strong Match"
 
     elif final_score >= 0.5:
