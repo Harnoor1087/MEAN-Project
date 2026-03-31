@@ -71,7 +71,7 @@ if __name__ == "__main__":
     )
 
     # Classification
-    category = classify_candidate(final_score)
+    category = classify_candidate(final_score, skill_score)
 
     # Output
     print("\n--- FINAL ANALYSIS ---")
