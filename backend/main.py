@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 
@@ -18,6 +19,14 @@ from database import SessionLocal
 from models import Candidate
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -74,7 +83,10 @@ async def analyze_resume(file: UploadFile = File(...)):
     resume_embedding = generate_embedding(resume_clean)
 
     # Job Description
-    with open("../data/job_description.txt", "r") as f:
+    BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+    job_path = os.path.join(BASE_DIR, "data", "job_description.txt")
+
+    with open(job_path, "r") as f:
         job_text = f.read()
 
     job_clean = process_text(job_text)
@@ -100,23 +112,22 @@ async def analyze_resume(file: UploadFile = File(...)):
 
     # Save
     data = {
-        "name": name,
-        "semantic": semantic_score,
-        "skill": skill_score,
-        "experience": experience_score,
-        "final": final_score,
-        "category": category,
-        "matched": resume_skills,
-        "missing": missing_skills
-    }
-
+    "name": name,
+    "semantic": float(semantic_score),
+    "skill": float(skill_score),
+    "experience": float(experience_score),
+    "final": float(final_score),
+    "category": category,
+    "matched": resume_skills,
+    "missing": missing_skills
+}
     save_to_db(data)
 
     return {
     "name": name,
-    "semantic_score": float(round(semantic_score, 2)),
-    "skill_score": float(round(skill_score, 2)),
-    "final_score": float(round(final_score, 2)),
+    "semantic_score": round(float(semantic_score), 2),
+    "skill_score": round(float(skill_score), 2),
+    "final_score": round(float(final_score), 2),
     "category": category,
     "missing_skills": missing_skills
 }
