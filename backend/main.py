@@ -52,16 +52,17 @@ def save_to_db(data):
     db = SessionLocal()
 
     candidate = Candidate(
-        name=data["name"],
-        semantic_score=data["semantic"],
-        skill_score=data["skill"],
-        experience_score=data["experience"],
-        final_score=data["final"],
-        category=data["category"],
-        matched_skills=", ".join(data["matched"]),
-        missing_skills=", ".join(data["missing"]),
-        job_id=data["job_id"]
-    )
+    name=data["name"],
+    semantic_score=data["semantic"],
+    skill_score=data["skill"],
+    experience_score=data["experience"],
+    final_score=data["final"],
+    category=data["category"],
+    matched_skills=", ".join(data["matched"]),
+    missing_skills=", ".join(data["missing"]),
+    job_id=data["job_id"],
+    eligibility_status=data["eligibility_status"]
+)
 
     db.add(candidate)
     db.commit()
@@ -213,7 +214,8 @@ async def analyze_resume(
         "category": category,
         "matched": matched_mandatory + matched_optional,
         "missing": missing_skills,
-        "job_id": job_id
+        "job_id": job_id,
+        "eligibility_status": eligibility_status
     }
 
     save_to_db(data)
