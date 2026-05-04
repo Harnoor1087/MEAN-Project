@@ -1,5 +1,4 @@
 from sentence_transformers import SentenceTransformer
-from resume_parser import extract_text
 from nlp_processor import process_text
 from insight_engine import (
     calculate_similarity,
