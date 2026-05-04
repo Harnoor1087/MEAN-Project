@@ -1,5 +1,4 @@
 import spacy
-from resume_parser import extract_text
 
 nlp = spacy.load("en_core_web_sm")
 
