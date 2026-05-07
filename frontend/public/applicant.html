@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Dashboard - AI Resume Intelligence</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h2>🤖 AI Resume Intelligence - Applicant</h2>
+            </div>
+            <div class="nav-links">
+                <span id="userName"></span>
+                <button onclick="logout()" class="btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('browse')">Browse Jobs</button>
+            <button class="tab-btn" onclick="showTab('myapps')">My Applications</button>
+        </div>
+
+        <!-- Browse Jobs Tab -->
+        <div id="browseTab" class="tab-content active">
+            <h2>Available Jobs</h2>
+            <div id="jobsList"></div>
+        </div>
+
+        <!-- My Applications Tab -->
+        <div id="myappsTab" class="tab-content">
+            <h2>My Applications</h2>
+            <div id="myApplicationsList"></div>
+        </div>
+
+        <!-- Apply Modal -->
+        <div id="applyModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeApplyModal()">&times;</span>
+                <h2>Apply for Job</h2>
+                
+                <div class="disclaimer-box">
+                    <h3>⚠️ IMPORTANT DISCLAIMER</h3>
+                    <p><strong>Please note the Job ID before applying!</strong></p>
+                    <p>Job ID: <span id="applyJobId" class="highlight-text"></span></p>
+                    <p>Job Title: <span id="applyJobTitle" class="highlight-text"></span></p>
+                    <p class="small-text">You must remember this Job ID as it will be required for tracking your application.</p>
+                </div>
+
+                <form id="applyForm" enctype="multipart/form-data">
+                    <input type="hidden" id="apply_job_id" name="jobId">
+                    
+                    <div class="form-group">
+                        <label for="apply_name">Full Name *</label>
+                        <input type="text" id="apply_name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="apply_email">Email *</label>
+                        <input type="email" id="apply_email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resume">Upload Resume (PDF) *</label>
+                        <input type="file" id="resume" name="resume" accept=".pdf" required>
+                        <small>Only PDF files are accepted</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificates">Upload Certificates (Optional, PDF)</label>
+                        <input type="file" id="certificates" name="certificates" accept=".pdf" multiple>
+                        <small>You can upload multiple certificate files</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="confirmJobId" required>
+                            I have noted the Job ID: <strong><span id="confirmJobIdText"></span></strong>
+                        </label>
+                    </div>
+                    
+                    <div id="applyError" class="error-message"></div>
+                    <div id="applySuccess" class="success-message"></div>
+                    
+                    <button type="submit" class="btn-primary" id="submitBtn">Submit Application</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Application Details Modal -->
+        <div id="detailsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeDetailsModal()">&times;</span>
+                <h2>Application Details</h2>
+                <div id="applicationDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/applicant.js"></script>
+</body>
+</html>
