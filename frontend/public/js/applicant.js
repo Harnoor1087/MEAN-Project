@@ -43,34 +43,48 @@ async function loadJobs() {
         const response = await fetch('/api/jobs');
         const data = await response.json();
         
+        console.log('Jobs data:', data); // Debug log
+        
         if (data.jobs && data.jobs.length > 0) {
-            jobsList.innerHTML = data.jobs.map(job => `
+            jobsList.innerHTML = data.jobs.map(job => {
+                // Ensure we have valid data
+                const title = job.title || 'Untitled Job';
+                const description = job.description || 'No description available';
+                const mandatorySkills = Array.isArray(job.mandatory_skills) ? job.mandatory_skills : [];
+                const optionalSkills = Array.isArray(job.optional_skills) ? job.optional_skills : [];
+                
+                // Escape title for HTML attribute
+                const escapedTitle = String(title).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                
+                return `
                 <div class="job-card">
-                    <h3>${job.title}</h3>
+                    <h3>${title}</h3>
                     <p><strong>Job ID:</strong> <span class="highlight-text">${job.id}</span></p>
-                    <p>${job.description}</p>
+                    <p>${description}</p>
                     <div class="job-skills">
                         <strong>Required Skills:</strong>
-                        ${job.mandatory_skills.map(skill => 
-                            `<span class="skill-tag mandatory">${skill}</span>`
-                        ).join('')}
+                        ${mandatorySkills.map(skill => 
+                            `<span class="skill-tag mandatory">${skill.trim()}</span>`
+                        ).join('') || '<span>None specified</span>'}
                     </div>
                     <div class="job-skills">
                         <strong>Preferred Skills:</strong>
-                        ${job.optional_skills.map(skill => 
-                            `<span class="skill-tag">${skill}</span>`
-                        ).join('')}
+                        ${optionalSkills.map(skill => 
+                            `<span class="skill-tag">${skill.trim()}</span>`
+                        ).join('') || '<span>None specified</span>'}
                     </div>
                     ${job.certification_enabled ? '<p>✅ Certifications are valued for this position</p>' : ''}
                     <div class="job-actions">
-                        <button class="btn-primary" onclick="openApplyModal(${job.id}, '${job.title}')">Apply Now</button>
+                        <button class="btn-primary" onclick="window.location.href='/apply.html?jobId=${job.id}'">Apply Now</button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         } else {
             jobsList.innerHTML = '<p>No jobs available at the moment.</p>';
         }
     } catch (error) {
+        console.error('Error loading jobs:', error);
         jobsList.innerHTML = '<p class="error-message show">Error loading jobs</p>';
     }
 }
@@ -145,24 +159,8 @@ async function loadMyApplications() {
 
 // Open apply modal
 function openApplyModal(jobId, jobTitle) {
-    document.getElementById('applyJobId').textContent = jobId;
-    document.getElementById('applyJobTitle').textContent = jobTitle;
-    document.getElementById('apply_job_id').value = jobId;
-    document.getElementById('confirmJobIdText').textContent = jobId;
-    
-    // Pre-fill user data
-    document.getElementById('apply_name').value = user.name;
-    document.getElementById('apply_email').value = user.email;
-    
-    // Reset form
-    document.getElementById('applyForm').reset();
-    document.getElementById('apply_name').value = user.name;
-    document.getElementById('apply_email').value = user.email;
-    document.getElementById('apply_job_id').value = jobId;
-    document.getElementById('applyError').classList.remove('show');
-    document.getElementById('applySuccess').classList.remove('show');
-    
-    document.getElementById('applyModal').classList.add('active');
+    // Redirect to dedicated apply page
+    window.location.href = `/apply.html?jobId=${jobId}`;
 }
 
 function closeApplyModal() {

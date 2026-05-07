@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for Job - AI Resume Intelligence</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .analysis-container {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .analysis-container.active {
+            display: block;
+        }
+        
+        .analyzing-loader {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .analysis-results {
+            display: none;
+        }
+        
+        .analysis-results.active {
+            display: block;
+        }
+        
+        .score-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .score-card h2 {
+            font-size: 3rem;
+            margin: 0;
+        }
+        
+        .score-card p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .skills-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .skill-list {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .skill-list h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        
+        .skill-item {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        .skill-item.matched {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .skill-item.missing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+        }
+        
+        .bar-chart {
+            margin: 1rem 0;
+        }
+        
+        .bar-item {
+            margin: 1rem 0;
+        }
+        
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .bar-bg {
+            background: #e9ecef;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .eligibility-badge {
+            display: inline-block;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        
+        .eligibility-badge.eligible {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .eligibility-badge.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .certificate-info {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h2><a href="/">🤖 AI Resume Intelligence</a></h2>
+            </div>
+            <div class="nav-links">
+                <a href="/applicant">Dashboard</a>
+                <button onclick="logout()" class="btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <h2>Apply for Job</h2>
+        
+        <!-- Application Form -->
+        <div id="applicationForm" class="tab-content active">
+            <div class="disclaimer-box">
+                <h3>⚠️ IMPORTANT DISCLAIMER</h3>
+                <p><strong>Please note the Job ID before applying!</strong></p>
+                <p>Job ID: <span id="jobId" class="highlight-text"></span></p>
+                <p>Job Title: <span id="jobTitle" class="highlight-text"></span></p>
+                <p class="small-text">You must remember this Job ID as it will be required for tracking your application.</p>
+            </div>
+
+            <form id="applyForm" enctype="multipart/form-data">
+                <input type="hidden" id="job_id" name="jobId">
+                
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resume">Upload Resume (PDF) *</label>
+                    <input type="file" id="resume" name="resume" accept=".pdf" required>
+                    <small>Only PDF files are accepted</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="certificates">Upload Certificates (Optional, PDF)</label>
+                    <input type="file" id="certificates" name="certificates" accept=".pdf" multiple>
+                    <small>You can upload multiple certificate files</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="confirmJobId" required>
+                        I have noted the Job ID: <strong><span id="confirmJobIdText"></span></strong>
+                    </label>
+                </div>
+                
+                <div id="applyError" class="error-message"></div>
+                
+                <button type="submit" class="btn-primary" id="submitBtn">Submit Application</button>
+            </form>
+        </div>
+
+        <!-- Analysis Container -->
+        <div id="analysisContainer" class="analysis-container">
+            <!-- Analyzing Loader -->
+            <div id="analyzingLoader" class="analyzing-loader">
+                <div class="spinner"></div>
+                <h2>🤖 Analyzing Your Resume...</h2>
+                <p>Our AI is processing your application</p>
+                <p>This may take a few moments</p>
+            </div>
+
+            <!-- Analysis Results -->
+            <div id="analysisResults" class="analysis-results">
+                <div class="score-card">
+                    <h2 id="finalScore">0%</h2>
+                    <p>Final Match Score</p>
+                    <div class="eligibility-badge" id="eligibilityBadge">Processing...</div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>📊 Detailed Score Breakdown</h3>
+                    <div class="bar-chart">
+                        <div class="bar-item">
+                            <div class="bar-label">
+                                <span>Semantic Match</span>
+                                <span id="semanticScore">0%</span>
+                            </div>
+                            <div class="bar-bg">
+                                <div class="bar-fill" id="semanticBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bar-item">
+                            <div class="bar-label">
+                                <span>Skills Match</span>
+                                <span id="skillScore">0%</span>
+                            </div>
+                            <div class="bar-bg">
+                                <div class="bar-fill" id="skillBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bar-item">
+                            <div class="bar-label">
+                                <span>Experience</span>
+                                <span id="experienceScore">0%</span>
+                            </div>
+                            <div class="bar-bg">
+                                <div class="bar-fill" id="experienceBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bar-item" id="certificationBarItem" style="display: none;">
+                            <div class="bar-label">
+                                <span>Certifications</span>
+                                <span id="certificationScore">0%</span>
+                            </div>
+                            <div class="bar-bg">
+                                <div class="bar-fill" id="certificationBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="certificate-info" id="certificateInfo" style="display: none;">
+                    <h4>📜 Certificates Analyzed</h4>
+                    <p><strong>Total Uploaded:</strong> <span id="totalCerts">0</span></p>
+                    <p><strong>Relevant to Job:</strong> <span id="relevantCerts">0</span></p>
+                </div>
+
+                <div class="skills-comparison">
+                    <div class="skill-list">
+                        <h3>✅ Matched Skills</h3>
+                        <div id="matchedSkills"></div>
+                    </div>
+                    <div class="skill-list">
+                        <h3>❌ Missing Skills</h3>
+                        <div id="missingSkills"></div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button onclick="window.location.href='/applicant'" class="btn-primary">Go to Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/apply.js"></script>
+</body>
+</html>

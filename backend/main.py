@@ -152,8 +152,8 @@ def get_job(job_id: int):
         "job_id": job.id,
         "title": job.title,
         "description": job.description,
-        "mandatory_skills": job.mandatory_skills.split(",") if job.mandatory_skills else [],
-        "optional_skills": job.optional_skills.split(",") if job.optional_skills else [],
+        "mandatory_skills": [s.strip() for s in job.mandatory_skills.split(",")] if job.mandatory_skills else [],
+        "optional_skills": [s.strip() for s in job.optional_skills.split(",")] if job.optional_skills else [],
         "certification_enabled": job.certification_enabled,
         "certification_weight": job.certification_weight
     }
@@ -176,8 +176,8 @@ def get_all_jobs():
             "title": job.title,
             "description": job.description,
 
-            "mandatory_skills": job.mandatory_skills.split(", "),
-            "optional_skills": job.optional_skills.split(", "),
+            "mandatory_skills": [s.strip() for s in job.mandatory_skills.split(",")] if job.mandatory_skills else [],
+            "optional_skills": [s.strip() for s in job.optional_skills.split(",")] if job.optional_skills else [],
 
             "certification_enabled": job.certification_enabled,
             "certification_weight": job.certification_weight
@@ -303,6 +303,9 @@ async def analyze_resume(
     total_certs = 0
 
     if certificates:
+        # Count all uploaded certificates first
+        total_certs = len(certificates)
+        
         for cert in certificates:
 
             cert_path = os.path.join(UPLOAD_FOLDER, cert.filename)
@@ -310,31 +313,37 @@ async def analyze_resume(
             with open(cert_path, "wb") as buffer:
                 shutil.copyfileobj(cert.file, buffer)
 
-            cert_data = extract_certificate_data(cert_path)
+            try:
+                cert_data = extract_certificate_data(cert_path)
 
-            cert_title = cert_data.get("title", "")
-            cert_skills = [s.lower() for s in cert_data.get("skills", [])]
-            is_valid = cert_data.get("is_valid_certificate", False)
+                cert_title = cert_data.get("title", "")
+                cert_skills = [s.lower() for s in cert_data.get("skills", [])]
+                is_valid = cert_data.get("is_valid_certificate", False)
 
-            if not cert_title and not cert_skills:
-                continue
+                # Skip only if completely empty (but still counted in total)
+                if not cert_title and not cert_skills:
+                    print(f"Warning: Could not extract data from {cert.filename}")
+                    continue
 
-            total_certs += 1
+                cert_text_for_embedding = cert_title + " " + " ".join(cert_skills)
+                cert_embedding = generate_embedding(cert_text_for_embedding)
 
-            cert_text_for_embedding = cert_title + " " + " ".join(cert_skills)
-            cert_embedding = generate_embedding(cert_text_for_embedding)
+                similarity = calculate_similarity(cert_embedding, job_skill_embedding)
+                print(f"Certificate '{cert.filename}' similarity: {similarity}")
 
-            similarity = calculate_similarity(cert_embedding, job_skill_embedding)
-            print("Certificate similarity:", similarity)
-
-            if (
-                is_valid and
-                (
-                    similarity > 0.35 or
-                    any(skill in mandatory_skills + optional_skills for skill in cert_skills)
-                )
-            ):
-                relevant_certificates += 1
+                if (
+                    is_valid and
+                    (
+                        similarity > 0.35 or
+                        any(skill in mandatory_skills + optional_skills for skill in cert_skills)
+                    )
+                ):
+                    relevant_certificates += 1
+                    print(f"✓ Certificate '{cert.filename}' marked as relevant")
+            
+            except Exception as e:
+                print(f"Error processing certificate {cert.filename}: {e}")
+                # Certificate is still counted in total_certs
 
     # -------------------- SKILL SCORING --------------------
 
